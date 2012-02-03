@@ -1,7 +1,7 @@
 <?php
 /**
  * This is an auxiliary class to help display the info on your CatList.php instance.
- * @author fernando@picandocodigo.net
+ * @author fernando@picandocodigo.nets
  */
 require_once 'CatList.php';
 
@@ -55,24 +55,14 @@ class CatListDisplayer {
     
     private function build_output($tag){
         $this->lcp_output .= $this->get_category_link('strong');
-        $this->lcp_output .= '<' . $tag;
-        if (isset($this->params['class'])): $this->lcp_output .= ' class="' . $this->params['class'] . '"'; endif;
-        $this->lcp_output .= '>';
+        $this->lcp_output .= '<' . $tag . ' class="'.$this->params['class'].'">';
         $inner_tag = ($tag == 'ul') ? 'li' : 'p';
         //Posts loop
         foreach ($this->catlist->get_categories_posts() as $single):
-                if ( !post_password_required($single) ){
-                  $this->lcp_output .= $this->lcp_build_post($single, $inner_tag);
-                }
+                $this->lcp_output .= $this->lcp_build_post($single, $inner_tag);
         endforeach;
-        $this->lcp_output .= '</' . $tag . '>';
-        
-        if (!empty($this->params['morelink'])):
-            $this->lcp_output .= '<a href="' . get_category_link($this->catlist->get_category_id()) . '">' 
-            . $this->params['morelink'] . '</a>';
-        endif;
 
-        
+        $this->lcp_output .= '</' . $tag . '>';
     }
 
     /**
@@ -82,24 +72,16 @@ class CatListDisplayer {
      * @return string
      */
     private function lcp_build_post($single, $tag){
-        global $post;
-        $class ='';
-        if ( $post->ID == $single->ID ):
-            $class = " class = current ";
-        endif;
-        $lcp_display_output = '<'. $tag . $class . '>';
-        $lcp_display_output .= $this->get_post_title($single);
+        $lcp_display_output = '<'. $tag . '>' . $this->get_post_title($single);
 
-        $lcp_display_output .= $this->get_comments($single) . ' ';
+        $lcp_display_output .= $this->get_comments($single);
 
-        $lcp_display_output .= $this->get_date($single) . ' ';
+        $lcp_display_output .= ' ' . $this->get_date($single);
 
-        $lcp_display_output .= $this->get_author($single) . ' ';
-      
-        if (isset($this->params['customfield_display'])){
-          $lcp_display_output .= $this->get_custom_fields($this->params['customfield_display'], $single->ID);
-        }
-        
+        $lcp_display_output .= $this->get_author($single);
+
+        $lcp_display_output .= $this->get_custom_fields($this->params['customfield_display'], $single->ID);
+
         $lcp_display_output .= $this->get_thumbnail($single);
 
         $lcp_display_output .= $this->get_content($single, 'p');
@@ -144,14 +126,9 @@ class CatListDisplayer {
         return $this->assign_style($info, $tag, $css_class);
     }
 
-    private function get_thumbnail($single, $tag = null){
-        if ( isset($this->params['thumbnail_class']) && $this->params['thumbnail_class'] != '' ){
-          $lcp_thumb_class = $this->params['thumbnail_class'];
-          $info = $this->catlist->get_thumbnail($single, $lcp_thumb_class);
-        } else {
-          $info = $this->catlist->get_thumbnail($single);
-        }
-        return $this->assign_style($info, $tag);
+    private function get_thumbnail($single, $tag = null, $css_class = null){
+        $info = $this->catlist->get_thumbnail($single);
+        return $this->assign_style($info, $tag, $css_class);
     }
 
     private function get_post_title($single, $tag = null, $css_class = null){
@@ -182,4 +159,7 @@ class CatListDisplayer {
             return '<' . $tag . ' class="' . $css_class . '">' . $info . '</' . $tag . '>';
         }
     }
+
+
+
 }

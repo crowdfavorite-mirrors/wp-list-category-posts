@@ -1,14 +1,14 @@
 <?php
 /**
  * The CatList object gets the info for the CatListDisplayer to show.
- * Each time you use the shortcode, you get an instance of this class.
- * @author fernando@picandocodigo.net
+ * Each shortcode appearence is an instance of this class.
+ * @author fernando@picandocodigo.nets
  */
 
 class CatList{
     private $params = array();
+    private $lcp_categories_posts = array();
     private $lcp_category_id = 0;
-    private $category_param;
 
     /**
      * Constructor gets the shortcode attributes as parameter
@@ -17,88 +17,45 @@ class CatList{
     public function __construct($atts) {
         $this->params = $atts;
         //Get the category posts:
-        $this->get_lcp_category();
-        $this->set_lcp_parameters();
+         $this->lcp_set_categories();
     }
 
     /**
-     * Order the parameters and query the DB for posts
+     * Get the categories & posts
      */
-    private function set_lcp_parameters(){
-        $args = array('cat'=> $this->lcp_category_id);
-        
-        $args = array_merge($args, array(
-        'numberposts' => $this->params['numberposts'],
-        'orderby' => $this->params['orderby'],
-        'order' => $this->params['order'],
-        'offset' => $this->params['offset']
-        ));
-        
-        //Exclude
-        if(isset($this->params['excludeposts']) && $this->params['excludeposts'] != '0'): $args['exclude'] = $this->params['excludeposts']; endif;
-        
+    private function lcp_set_categories(){
+        if($this->params['name'] != '' && $this->params['id'] == '0'){
+            $this->lcp_category_id = $this->get_category_id_by_name($this->params['name']);
+        }else{
+            $this->lcp_category_id = $this->params['id'];
+        }
+
+        $lcp_category = 'cat=' . $this->lcp_category_id;
+	
+        //Build the query for get_posts()
+        $lcp_query = $lcp_category.'&numberposts=' . $this->params['numberposts'] .
+                                '&orderby=' . $this->params['orderby'] .
+                                '&order=' . $this->params['order'] .
+                                '&exclude=' . $this->params['excludeposts'] .
+                                '&tag=' . $this->params['tags'] .
+                                '&offset=' . $this->params['offset'];
+
         // Post type and post parent:
-        if(isset($this->params['post_type']) && $this->params['post_type'] != '0'): $args['post_type'] = $this->params['post_type']; endif;
-        if(isset($this->params['post_parent']) && $this->params['post_parent'] != '0'): $args['post_parent'] = $this->params['post_parent']; endif;
+        if($this->params['post_type']): $lcp_query .= '&post_type=' . $this->params['post_type']; endif;
+        if($this->params['post_parent']): $lcp_query .= '&post_parent=' . $this->params['post_parent']; endif;
 
         // Custom fields 'customfield_name' & 'customfield_value' should both be defined
-        if( !empty($this->params['customfield_value']) ):
-          $args['meta_key'] = $this->params['customfield_name'];
-          $args['meta_value'] = $this->params['customfield_value'];
+        if($this->params['customfield_name']!='' && $this->params['customfield_value'] != ''):
+                $lcp_query .= '&meta_key=' . $this->params['customfield_name'] . '&meta_value=' . $this->params['customfield_value'];
         endif;
-
-        //Get private posts
-        if(is_user_logged_in()){
-            $args['post_status'] = array('publish','private');
-        }
-
-        // Added custom taxonomy support
-        if ( !empty($this->params['taxonomy']) && !empty($this->params['tags']) ) {
-          $args['tax_query'] = array(array(
-              'taxonomy' => $this->params['taxonomy'],
-              'field' => 'slug',
-              'terms' => explode(",",$this->params['tags'])
-          ));
-        } else if ( !empty($this->params['tags']) ) {
-          $args['tag'] = $this->params['tags'];
-        }
-        
-        $this->lcp_categories_posts = get_posts($args);
+        $this->lcp_categories_posts = get_posts($lcp_query);
     }
 
-
-    private function get_lcp_category(){
-      if ( isset($this->params['categorypage']) && $this->params['categorypage'] == 'yes' ){
-        $this->lcp_category_id = $this->lcp_get_current_category();
-      } elseif ( !empty($this->params['name']) ){
-        if (preg_match('/,/', $this->params['name'])){
-          $categories = '';
-          $cat_array = explode(",", $this->params['name']);
-          foreach ($cat_array as $category) {
-            $id = $this->get_category_id_by_name($category);
-            $categories .= $id . ",";
-          }
-          $this->lcp_category_id = $categories; 
-        } else {
-          $this->lcp_category_id = $this->get_category_id_by_name($this->params['name']);
-        }
-      } elseif ( isset($this->params['id']) && $this->params['id'] != '0' ){
-        $this->lcp_category_id = $this->params['id'];
-      }
-    }
-    
-    public function lcp_get_current_category(){
-        global $post;
-        $categories = get_the_category($post->ID);
-        return $categories[0]->cat_ID;
-    }
-    
     /**
      * Get the category id from its name
      * by Eric Celeste / http://eric.clst.org
      */
     private function get_category_id_by_name($cat_name){
-        #TODO: Support multiple names (this used to work, but not anymore)
         //We check if the name gets the category id, if not, we check the slug.
         $term = get_term_by('slug', $cat_name, 'category');
         if (!$term):
@@ -160,7 +117,7 @@ class CatList{
     }
 
     public function get_comments_count($single){
-        if (isset($this->params['comments']) && $this->params['comments'] == 'yes'){
+        if ($this->params['comments'] == 'yes'){
                 return ' (' . $single->comment_count . ')';
         } else {
             return null;
@@ -188,7 +145,10 @@ class CatList{
     }
 
     public function get_content($single){
-        if (isset($this->params['content']) && $this->params['content'] =='yes' && $single->post_content){
+        if ($this->params['content']=='yes' && $single->post_content){
+            if ( post_password_required($single) ) {
+                    return __('This is a protected post.');
+            }
             $lcp_content = $single->post_content;
             //Need to put some more thought on this!
             //Added to stop a post with catlist to display an infinite loop of catlist shortcode parsing
@@ -211,6 +171,10 @@ class CatList{
                     return $single->post_excerpt;
             }
             $lcp_excerpt = strip_tags($single->post_content);
+            if ( post_password_required($single) ) {
+                    $lcp_excerpt = __('There is no excerpt because this is a protected post.');
+                    return $lcp_excerpt;
+            }
             if (strlen($lcp_excerpt) > 255) {
                     $lcp_excerpt = substr($lcp_excerpt, 0, 252) . '...';
             }
@@ -224,30 +188,12 @@ class CatList{
      * Get the post Thumbnail
      * @see http://codex.wordpress.org/Function_Reference/get_the_post_thumbnail
      * @param unknown_type $single
-     * 
      */
-    public function get_thumbnail($single, $lcp_thumb_class = null){
+    public function get_thumbnail($single){
         if ($this->params['thumbnail']=='yes'){
             $lcp_thumbnail = '';
             if ( has_post_thumbnail($single->ID) ) {
-              
-              if ( in_array( $this->params['thumbnail_size'], array('thumbnail', 'medium', 'large', 'full') ) ) :
-                $lcp_thumb_size = $this->params['thumbnail_size'];
-              elseif ($this->params['thumbnail_size']):
-                $lcp_thumb_size = explode(",", $this->params['thumbnail_size']);
-              else :
-                $lcp_thumb_size = 'thumbnail';
-              endif;//thumbnail size
-              
-              $lcp_thumbnail = '<a href="' . get_permalink($single->ID).'">'; 
-              
-              $lcp_thumbnail .= get_the_post_thumbnail(
-                                  $single->ID, 
-                                  $lcp_thumb_size, 
-                                  ($lcp_thumb_class != null) ? array('class' => $lcp_thumb_class ) : null
-                                );
-              $lcp_thumbnail .= '</a>';
-              
+                    $lcp_thumbnail = get_the_post_thumbnail($single->ID);
             }
             return $lcp_thumbnail;
         } else {
