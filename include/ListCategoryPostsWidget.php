@@ -32,9 +32,6 @@ class ListCategoryPostsWidget extends WP_Widget{
     $thumbnail_size = ($instance['thumbnail_size']) ? $instance['thumbnail_size'] : 'thumbnail';
     $morelink = empty($instance['morelink']) ? ' ' : $instance['morelink'];
 
-    echo $before_widget;
-    echo $before_title . $title . $after_title;
-
     $atts = array(
       'id' => $category_id,
       'orderby' => $orderby,
@@ -54,6 +51,15 @@ class ListCategoryPostsWidget extends WP_Widget{
       'thumbnail_size' => $thumbnail_size,
       'morelink' => $morelink
     );
+
+    echo $before_widget;
+
+    if($title == 'catlink'){
+      //if the user has setup 'catlink' as the title, replace it with the category link:
+      $lcp_category = get_category($category_id);
+      $title = '<a href="' . get_category_link($lcp_category->cat_ID) . '">' . $lcp_category->name . '</a>';
+    }
+    echo $before_title . $title . $after_title;
 
     $catlist_displayer = new CatListDisplayer($atts);
     echo  $catlist_displayer->display();
