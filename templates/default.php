@@ -41,7 +41,8 @@ $lcp_display_output .= $this->get_category_link('strong');
 $lcp_display_output .= '<ul class="lcp_catlist">';
 
 /**
- * Posts loop.
+ * POSTS LOOP
+ *
  * The code here will be executed for every post in the category.
  * As you can see, the different options are being called from functions on the
  * $this variable which is a CatListDisplayer.
@@ -56,7 +57,7 @@ foreach ($this->catlist->get_categories_posts() as $single){
   $lcp_display_output .= "<li>";
 
   //Show the title and link to the post:
-  $lcp_display_output .= $this->get_post_title($single);
+  $lcp_display_output .= $this->get_post_title($single, 'h4', 'lcp_post');
 
   //Show comments:
   $lcp_display_output .= $this->get_comments($single);
@@ -64,11 +65,14 @@ foreach ($this->catlist->get_categories_posts() as $single){
   //Show date:
   $lcp_display_output .= ' ' . $this->get_date($single);
 
+  //Show date modified:
+  $lcp_display_output .= ' ' . $this->get_modified_date($single);
+
   //Show author
   $lcp_display_output .= $this->get_author($single);
 
   //Custom fields:
-  $lcp_display_output .= $this->get_custom_fields($this->params['customfield_display'], $single->ID);
+  $lcp_display_output .= $this->get_custom_fields($single);
 
   //Post Thumbnail
   $lcp_display_output .= $this->get_thumbnail($single);
@@ -85,10 +89,15 @@ foreach ($this->catlist->get_categories_posts() as $single){
    */
   $lcp_display_output .= $this->get_excerpt($single, 'div', 'lcp_excerpt');
 
+
+  // Get Posts "More" link:
+  $lcp_display_output .= $this->get_posts_morelink($single);
+
   //Close li tag
   $lcp_display_output .= '</li>';
 }
 
+// Close the wrapper I opened at the beginning:
 $lcp_display_output .= '</ul>';
 
 // If there's a "more link", show it:

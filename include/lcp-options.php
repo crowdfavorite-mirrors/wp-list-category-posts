@@ -18,8 +18,7 @@ function list_category_posts_options() {
 	if ( !current_user_can( 'manage_options' ) )  {
 		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 	}
-  $numberposts = get_option('numberposts');
- ?>
+?>
 <div class="wrap">
   <h2>List Category Posts</h2>
   <form method="post" action="options.php">
@@ -37,14 +36,14 @@ function list_category_posts_options() {
             </label>
           </th>
           <td>
-            <input type="text" id="numberposts" name="numberposts" value="<?php echo $numberposts; ?>"/>
+            <input type="text" id="numberposts" name="numberposts"  value="<?php echo esc_attr( get_option('numberposts') ); ?>"/>
             <small>
               <ul>
                 <li>
-                  <?php _e("Default number of posts (overriden using <code>numberposts</code> parameter on each shortcode)."); ?>
+                  <?php _e("Default number of posts (overriden using <code>numberposts</code> parameter on each shortcode).", "list-category-posts"); ?>
                 </li>
-                <li><?php _e("0 - displays the max number of posts per page");?></li>
-                <li><?php _e("-1 - displays ALL THE POSTS (no limit)");?></li>
+                <li><?php _e("0 - displays the max number of posts per page", "list-category-posts");?></li>
+                <li><?php _e("-1 - displays ALL THE POSTS (no limit)", "list-category-posts", "list-category-posts");?></li>
               </ul>
             </small>
           </td>
@@ -54,13 +53,13 @@ function list_category_posts_options() {
   </form>
   <p>
     <em>
-      <?php _e("Thanks for using List Category Posts.");?>
+      <?php _e("Thanks for using List Category Posts.", "list-category-posts");?>
       <?php _e("If you need help with the plugin, please visit
       the <a href='http://wordpress.org/support/plugin/list-category-posts'>WordPress
       support forum</a>. Make sure
       you <a href='http://wordpress.org/extend/plugins/list-category-posts/other_notes/'>read
       the instructions</a> to be aware of all the things you can do
-      with List Category Posts."); ?>
+      with List Category Posts and <a href='https://github.com/picandocodigo/List-Category-Posts/blob/master/doc/FAQ.md#frequently-asked-questions'>check out the FAQ</a>.", "list-category-posts"); ?>
     </em>
   </p>
 
@@ -71,7 +70,7 @@ function list_category_posts_options() {
       to <a href='https://github.com/picandocodigo/List-Category-Posts/issues'>GitHub
       Issues</a> and check out the
       the <a href='https://github.com/picandocodigo/List-Category-Posts'>GitHub
-      repo</a> if you want to contribute code."); ?>
+      repo</a> if you want to contribute code.", "list-category-posts"); ?>
   </p>
   <p>
     <?php _e("If you've found the plugin useful, consider making
@@ -81,8 +80,8 @@ function list_category_posts_options() {
       for <a href='http://www.amazon.com/gp/registry/wishlist/2HU1JYOF7DX5Q/ref=wl_web'
       title='Amazon Wishlist' rel='nofollow'>books</a>
       or <a href='http://www.amazon.com/registry/wishlist/1LVYAOJAZQOI0/ref=cm_wl_rlist_go_o'
-      rel='nofollow'>comic books</a> :)."); ?>
+      rel='nofollow'>comic books</a> :).", "list-category-posts"); ?>
     </em>
   </p>
 </div>
-<?php } ?>
+<?php }
